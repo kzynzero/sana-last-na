@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Barangay Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700;800&family=Oswald:wght@600&family=Unbounded:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lato', Helvetica, sans-serif; background: #f0f2f8; min-height: 100vh; color: #22344c; }
+    button, input, select, textarea { font: inherit; }
+    body.modal-open { overflow: hidden; }
+    .page { display: none; }
+    .page.active { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; min-width: 250px; background: #fff; display: flex; flex-direction: column; border-right: 1px solid #e4e8f0; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+    .sidebar-brand { padding: 20px 16px 18px; border-bottom: 1px solid #e4e8f0; display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 40px; height: 40px; background: #152354; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .brand-icon svg { width: 20px; height: 20px; }
+    .brand-text .name { font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 10px; color: #152354; line-height: 1.4; }
+    .brand-text .sub { font-size: 10px; color: #8892a4; margin-top: 1px; }
+    .nav-section { padding: 12px 10px; flex: 1; }
+    .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #b0b8c8; text-transform: uppercase; padding: 0 8px; margin: 10px 0 4px; }
+    .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #5a6478; cursor: pointer; text-decoration: none; border: none; background: none; width: 100%; text-align: left; transition: background 0.15s, color 0.15s; position: relative; }
+    .nav-item:hover { background: #f0f2f8; color: #152354; }
+    .nav-item.active { background: #152354; color: #fff; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-badge { margin-left: auto; background: #9a3543; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+    .nav-sub { padding-left: 16px; }
+    .nav-sub .nav-item { font-size: 12px; padding: 7px 10px; }
+    .nav-sub .nav-item.active { background: #e8ecf7; color: #152354; font-weight: 700; }
+    .sidebar-footer { padding: 10px; border-top: 1px solid #e4e8f0; }
+    .sidebar-user { padding: 10px 12px; display: flex; align-items: center; gap: 10px; border-radius: 8px; background: #f5f6fa; margin-bottom: 6px; }
+    .sidebar-user-avatar { width: 34px; height: 34px; border-radius: 50%; background: #152354; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .sidebar-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-user-info .name { font-size: 12px; font-weight: 700; color: #152354; }
+    .sidebar-user-info .role { font-size: 10px; color: #8892a4; margin-top: 1px; }
+    .logout-btn { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #9a3543; cursor: pointer; background: none; border: none; width: 100%; transition: background 0.15s; }
+    .logout-btn:hover { background: #fdf0f1; }
+    .logout-btn svg { width: 16px; height: 16px; }
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger svg { width: 20px; height: 20px; color: #152354; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+    .overlay.open { display: block; }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { background: #fff; border-bottom: 1px solid #e4e8f0; padding: 12px 20px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; }
+    .search-wrap { display: flex; align-items: center; gap: 7px; background: #f5f6fa; border: 1px solid #e4e8f0; border-radius: 20px; padding: 7px 14px; flex: 1; max-width: 360px; }
+    .search-wrap svg { width: 14px; height: 14px; color: #8892a4; flex-shrink: 0; }
+    .search-wrap input { border: none; background: transparent; font-size: 13px; color: #152354; outline: none; width: 100%; font-family: 'Lato', sans-serif; }
+    .search-wrap input::placeholder { color: #b0b8c8; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .notif-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e4e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+    .notif-btn svg { width: 15px; height: 15px; color: #5a6478; }
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; background: #9a3543; border-radius: 50%; border: 1.5px solid #fff; }
+    .admin-chip { display: flex; align-items: center; gap: 7px; background: #f0f2f8; border: 1px solid #e4e8f0; border-radius: 20px; padding: 5px 10px 5px 5px; }
+    .admin-avatar { width: 22px; height: 22px; border-radius: 50%; background: #152354; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
+    .admin-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-chip span { font-size: 12px; font-weight: 700; color: #152354; letter-spacing: 0.04em; }
+    .content { padding: 24px 20px; flex: 1; }
+    .page-title { font-size: 20px; font-weight: 800; color: #152354; margin-bottom: 18px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .stat-card { border-radius: 14px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; }
+    .stat-card.c-dark { background: #152354; } .stat-card.c-accent { background: #9a3543; } .stat-card.c-white { background: #fff; border: 1px solid #e4e8f0; } .stat-card.c-gray { background: #8c97a4; }
+    .stat-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+    .c-dark .stat-icon, .c-accent .stat-icon, .c-gray .stat-icon { background: rgba(255,255,255,0.15); } .c-white .stat-icon { background: #f0f2f8; }
+    .stat-icon svg { width: 16px; height: 16px; }
+    .c-dark .stat-icon svg, .c-accent .stat-icon svg, .c-gray .stat-icon svg { color: #fff; } .c-white .stat-icon svg { color: #152354; }
+    .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+    .c-dark .stat-label, .c-accent .stat-label, .c-gray .stat-label { color: rgba(255,255,255,0.75); } .c-white .stat-label { color: #8892a4; }
+    .stat-value { font-family: 'Oswald', sans-serif; font-size: 30px; font-weight: 600; line-height: 1; }
+    .c-dark .stat-value, .c-accent .stat-value, .c-gray .stat-value { color: #fff; } .c-white .stat-value { color: #152354; }
+    .stat-trend { font-size: 10px; margin-top: 5px; }
+    .c-dark .stat-trend, .c-accent .stat-trend, .c-gray .stat-trend { color: rgba(255,255,255,0.6); } .c-white .stat-trend { color: #8892a4; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .panel { background: #fff; border-radius: 14px; border: 1px solid #e4e8f0; overflow: hidden; }
+    .panel-head { padding: 14px 18px; border-bottom: 1px solid #e4e8f0; display: flex; align-items: center; justify-content: space-between; }
+    .panel-head h2 { font-size: 13px; font-weight: 700; color: #152354; }
+    .panel-head .see-all { font-size: 11px; font-weight: 600; color: #9a3543; cursor: pointer; border: none; background: none; }
+    .panel-body { padding: 0 18px; }
+    .doc-row, .res-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f2f8; gap: 10px; }
+    .doc-row:last-child, .res-row:last-child { border-bottom: none; }
+    .doc-icon { width: 30px; height: 30px; border-radius: 7px; background: #f0f2f8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .doc-icon svg { width: 14px; height: 14px; color: #152354; }
+    .doc-info, .res-info { flex: 1; min-width: 0; }
+    .doc-name, .res-name { font-size: 12px; font-weight: 600; color: #152354; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-meta, .res-address { font-size: 10px; color: #8892a4; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
+    .badge.approved, .badge.active { background: #e6f4ea; color: #1a7a38; }
+    .badge.pending { background: #fff4e0; color: #995500; }
+    .badge.rejected, .badge.inactive { background: #fdeaea; color: #a32d2d; }
+    .badge.released { background: #e0eeff; color: #1740a8; }
+    .badge.archived { background: #eef1f7; color: #516074; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #152354; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .res-hh { font-size: 11px; font-weight: 600; color: #8892a4; background: #f0f2f8; padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+    .table-wrap { background: #fff; border-radius: 14px; border: 1px solid #e4e8f0; overflow: hidden; }
+    .table-toolbar { padding: 14px 18px; border-bottom: 1px solid #e4e8f0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .table-toolbar h2 { font-size: 13px; font-weight: 700; color: #152354; }
+    .toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .filter-select { border: 1px solid #e4e8f0; border-radius: 20px; padding: 5px 12px; font-size: 12px; color: #152354; background: #fff; cursor: pointer; font-family: 'Lato', sans-serif; outline: none; }
+    .add-btn, .save-btn { background: #152354; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Lato', sans-serif; display: flex; align-items: center; gap: 5px; }
+    .ghost-btn { background: #fff; color: #152354; border: 1px solid #d7deeb; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .save-btn { padding: 8px 20px; font-weight: 700; margin-top: 4px; }
+    .save-btn.danger { background: #9a3543; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead tr { background: #cbceff40; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; color: #22344ccc; border-bottom: 1px solid #e4e8f0; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #f0f2f8; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8f9fc; }
+    tbody td { padding: 10px 14px; color: #22344c; vertical-align: middle; }
+    .tbl-actions { display: flex; gap: 5px; }
+    .action-btn { width: 24px; height: 24px; border-radius: 5px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .action-btn svg { width: 12px; height: 12px; }
+    .action-btn.view { background: #e8ecf7; color: #152354; }
+    .action-btn.edit { background: #1740a8; color: #fff; }
+    .action-btn.del { background: #fdeaea; color: #a32d2d; }
+    .empty-state { padding: 24px 18px; color: #8892a4; font-size: 12px; text-align: center; }
+    .settings-layout { display: grid; grid-template-columns: 180px 1fr; gap: 18px; }
+    .settings-nav { background: #fff; border-radius: 14px; border: 1px solid #e4e8f0; padding: 8px; height: fit-content; }
+    .settings-nav-item { display: block; padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; color: #5a6478; cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: background 0.15s; }
+    .settings-nav-item:hover { background: #f0f2f8; color: #152354; }
+    .settings-nav-item.active { background: #152354; color: #fff; font-weight: 600; }
+    .settings-content { display: flex; flex-direction: column; gap: 16px; }
+    .settings-card { background: #fff; border-radius: 14px; border: 1px solid #e4e8f0; overflow: hidden; }
+    .settings-card-head { padding: 12px 18px; border-bottom: 1px solid #e4e8f0; background: #cbceff30; }
+    .settings-card-head h3 { font-size: 13px; font-weight: 700; color: #22344c; }
+    .settings-card-body { padding: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 11px; font-weight: 600; color: #152354cc; }
+    .form-group input, .form-group select, .form-group textarea { border: 1px solid #e4e8f0; border-radius: 8px; padding: 7px 10px; font-size: 12px; color: #152354; background: #f5f6fa; outline: none; font-family: 'Lato', sans-serif; }
+    .form-group textarea { min-height: 88px; resize: vertical; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #152354; background: #fff; }
+    .profile-pic-area { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
+    .profile-circle { width: 72px; height: 72px; border-radius: 50%; background: #e8ecf7; border: 2px dashed #b0b8c8; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-circle svg { width: 24px; height: 24px; color: #8892a4; }
+    .profile-upload-info p, .helper-text { font-size: 12px; color: #5a6478; margin-bottom: 4px; }
+    .upload-btn { background: #152354; color: #fff; border: none; border-radius: 7px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Lato', sans-serif; }
+    .helper-text { font-size: 11px; color: #8892a4; margin-top: 8px; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(10, 18, 36, 0.55); display: none; align-items: center; justify-content: center; z-index: 500; padding: 18px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(680px, 100%); background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 70px rgba(18, 35, 84, 0.25); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #e4e8f0; }
+    .modal-head h3 { font-size: 16px; color: #152354; }
+    .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #8892a4; }
+    .modal-body { padding: 20px; max-height: 70vh; overflow: auto; }
+    .modal-foot { padding: 16px 20px; border-top: 1px solid #e4e8f0; display: flex; justify-content: flex-end; gap: 8px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .detail-card { background: #f8f9fc; border: 1px solid #e7ebf5; border-radius: 12px; padding: 12px; }
+    .detail-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8892a4; margin-bottom: 4px; }
+    .detail-value { font-size: 13px; font-weight: 600; color: #152354; line-height: 1.5; word-break: break-word; }
+    .toast-stack { position: fixed; right: 16px; bottom: 16px; z-index: 700; display: flex; flex-direction: column; gap: 10px; }
+    .toast { min-width: 250px; max-width: 320px; background: #fff; border: 1px solid #e4e8f0; border-left: 4px solid #152354; border-radius: 12px; padding: 12px 14px; box-shadow: 0 12px 35px rgba(16, 32, 74, 0.14); }
+    .toast.success { border-left-color: #1a7a38; } .toast.error { border-left-color: #a32d2d; }
+    .toast-title { font-size: 12px; font-weight: 800; color: #152354; }
+    .toast-text { font-size: 11px; color: #5a6478; margin-top: 3px; }
+    .hh-member-tag { display: inline-flex; align-items: center; gap: 4px; background: #e8ecf7; color: #152354; border-radius: 5px; font-size: 11px; font-weight: 600; padding: 2px 8px; margin: 2px; }
+    @media (max-width: 1100px) { .stat-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 900px) { .panels, .settings-layout, .detail-grid, .form-row { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: -250px; top: 0; height: 100%; transition: left 0.3s ease; z-index: 200; } .sidebar.open { left: 0; } .hamburger { display: flex; } .content { padding: 16px 14px; } .topbar { padding: 10px 14px; } .admin-chip span { display: none; } .search-wrap { max-width: none; } }
+    @media (max-width: 480px) { .stat-grid, .stat-grid-2 { grid-template-columns: 1fr 1fr; } .stat-value { font-size: 24px; } .modal-foot { flex-direction: column-reverse; } .ghost-btn, .save-btn, .add-btn { width: 100%; justify-content: center; } }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-home">
+    <aside class="sidebar" id="sidebar-home"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="global-search-home" placeholder="Search residents, documents..."/></div>
+        <div class="topbar-right"><button class="notif-btn" id="home-notif-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></button><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-home"></div><span id="topbar-name-home">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="stat-grid">
+          <div class="stat-card c-accent"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="stat-label">Total Residents</div><div class="stat-value" id="dashboard-total-residents">0</div><div class="stat-trend" id="dashboard-residents-trend">Loading...</div></div></div>
+          <div class="stat-card c-white"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div><div class="stat-label">Total Household</div><div class="stat-value" id="dashboard-total-households">0</div><div class="stat-trend" id="dashboard-households-trend">Loading...</div></div></div>
+          <div class="stat-card c-dark"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stat-label">Approved Docs</div><div class="stat-value" id="dashboard-approved-docs">0</div><div class="stat-trend">Ready for release or already released</div></div></div>
+          <div class="stat-card c-white"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="stat-label">Pending Requests</div><div class="stat-value" id="dashboard-pending-docs">0</div><div class="stat-trend">Awaiting action</div></div></div>
+        </div>
+        <div class="panels">
+          <div class="panel"><div class="panel-head"><h2>Recent Document Requests</h2><button class="see-all" onclick="goTo('page-docrequests')">See all</button></div><div class="panel-body" id="recent-documents-panel"></div></div>
+          <div class="panel"><div class="panel-head"><h2>Recently Added Residents</h2><button class="see-all" onclick="goTo('page-residents')">See all</button></div><div class="panel-body" id="recent-residents-panel"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESIDENTS PAGE -->
+  <div class="page" id="page-residents">
+    <aside class="sidebar" id="sidebar-residents"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-residents')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="resident-search" placeholder="Search residents..."/></div>
+        <div class="topbar-right"><button class="notif-btn" id="residents-notif-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></button><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-residents"></div><span id="topbar-name-residents">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Residents</h1>
+        <div class="stat-grid-2">
+          <div class="stat-card c-accent"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="stat-label">Total Residents</div><div class="stat-value" id="resident-total-stat">0</div><div class="stat-trend" id="resident-stat-trend">Loading...</div></div></div>
+          <div class="stat-card c-white"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><div><div class="stat-label">Total Households</div><div class="stat-value" id="resident-household-stat">0</div><div class="stat-trend">Across all zones</div></div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h2>Residents List</h2><div class="toolbar-right"><select class="filter-select" id="resident-zone-filter"><option>All Zones</option></select><button class="add-btn" id="add-resident-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Resident</button></div></div>
+          <table><thead><tr><th>ID</th><th>Full Name</th><th>Birthday</th><th>Gender</th><th>Civil Status</th><th>Address</th><th>Contact</th><th>Household</th><th>Zone</th><th>Status</th><th>Actions</th></tr></thead><tbody id="residents-table-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOUSEHOLDS PAGE -->
+  <div class="page" id="page-households">
+    <aside class="sidebar" id="sidebar-households"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-households')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="household-search" placeholder="Search households..."/></div>
+        <div class="topbar-right"><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-households"></div><span id="topbar-name-households">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Households</h1>
+        <div class="stat-grid-2">
+          <div class="stat-card c-accent"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="stat-label">Total Residents</div><div class="stat-value" id="household-resident-stat">0</div></div></div>
+          <div class="stat-card c-white"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><div><div class="stat-label">Total Households</div><div class="stat-value" id="household-total-stat">0</div></div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h2>Household List</h2><div class="toolbar-right"><button class="add-btn" id="add-household-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Household</button></div></div>
+          <table><thead><tr><th>ID</th><th>Household Head</th><th>Address</th><th>Residents</th><th>Actions</th></tr></thead><tbody id="households-table-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENT REQUESTS PAGE -->
+  <div class="page" id="page-docrequests">
+    <aside class="sidebar" id="sidebar-docrequests"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-docrequests')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="doc-search" placeholder="Search document requests..."/></div>
+        <div class="topbar-right"><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-docs"></div><span id="topbar-name-docs">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Document Requests</h1>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h2>All Requests</h2><div class="toolbar-right"><select class="filter-select" id="doc-status-filter"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Released</option></select><select class="filter-select" id="doc-type-filter"><option>All Types</option></select><button class="add-btn" id="add-doc-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Request</button></div></div>
+          <table><thead><tr><th>ID</th><th>Name</th><th>Document Type</th><th>Date Requested</th><th>Status</th><th>Actions</th></tr></thead><tbody id="docs-table-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHIVE PAGE -->
+  <div class="page" id="page-archive">
+    <aside class="sidebar" id="sidebar-archive"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-archive')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="archive-search" placeholder="Search archive..."/></div>
+        <div class="topbar-right"><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-archive"></div><span id="topbar-name-archive">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Archive</h1>
+        <div class="stat-grid-2">
+          <div class="stat-card c-gray"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="stat-label">Archived Residents</div><div class="stat-value" id="archive-resident-count">0</div></div></div>
+          <div class="stat-card c-white"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="stat-label">Archived Doc Requests</div><div class="stat-value" id="archive-doc-count">0</div></div></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="add-btn" onclick="switchArchive('residents')" id="arch-tab-res" style="background:#152354;">Archived Residents</button>
+          <button class="add-btn" onclick="switchArchive('docs')" id="arch-tab-docs" style="background:#8892a4;">Archived Documents</button>
+        </div>
+        <div class="table-wrap" id="arch-residents-table">
+          <div class="table-toolbar"><h2>Archived Residents</h2></div>
+          <table><thead><tr><th>ID</th><th>Full Name</th><th>Address</th><th>Household</th><th>Actions</th></tr></thead><tbody id="archive-residents-body"></tbody></table>
+        </div>
+        <div class="table-wrap" id="arch-docs-table" style="display:none;">
+          <div class="table-toolbar"><h2>Archived Document Requests</h2></div>
+          <table><thead><tr><th>ID</th><th>Name</th><th>Document Type</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="archive-docs-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <aside class="sidebar" id="sidebar-settings"></aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" onclick="openSidebar('sidebar-settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search settings..."/></div>
+        <div class="topbar-right"><div class="admin-chip"><div class="admin-avatar" id="topbar-avatar-settings"></div><span id="topbar-name-settings">–</span></div></div>
+      </header>
+      <div class="content">
+        <h1 class="page-title">Settings</h1>
+        <div class="settings-layout">
+          <div class="settings-nav">
+            <button class="settings-nav-item active" onclick="switchSettings('account',this)">Account</button>
+            <button class="settings-nav-item" onclick="switchSettings('barangay',this)">Barangay Info</button>
+            <button class="settings-nav-item" onclick="switchSettings('document',this)">Document</button>
+            <button class="settings-nav-item" onclick="switchSettings('backup',this)">Backup &amp; Restore</button>
+            <button class="settings-nav-item" onclick="switchSettings('system',this)">System</button>
+          </div>
+          <div class="settings-content" id="settings-panels">
+            <!-- ACCOUNT -->
+            <div id="sp-account">
+              <div class="settings-card">
+                <div class="settings-card-head"><h3>My Account</h3></div>
+                <div class="settings-card-body">
+                  <div class="form-row">
+                    <div class="form-group"><label>Username</label><input type="text" id="account-username"/></div>
+                    <div class="form-group"><label>New Password (leave blank to keep)</label><input type="password" id="account-password" placeholder="••••••••"/></div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="account-fullname"/></div>
+                    <div class="form-group"><label>Role</label><input type="text" id="account-role" readonly style="background:#f0f2f8"/></div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group"><label>Email Address</label><input type="email" id="account-email"/></div>
+                    <div class="form-group"><label>Contact Number</label><input type="text" id="account-contact"/></div>
+                  </div>
+                  <button class="save-btn" id="save-account-btn">Save Changes</button>
+                </div>
+              </div>
+              <div class="settings-card">
+                <div class="settings-card-head"><h3>Profile Photo</h3></div>
+                <div class="settings-card-body">
+                  <div class="profile-pic-area">
+                    <div class="profile-circle" id="profile-preview">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="profile-upload-info">
+                      <p id="profile-file-label">Upload a profile photo (JPG, PNG, max 3MB)</p>
+                      <button class="upload-btn" id="choose-profile-file-btn">Choose Photo</button>
+                      <input type="file" id="profile-file-input" accept=".png,.jpg,.jpeg,.webp" hidden>
+                      <p class="helper-text" id="upload-progress-text"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-card">
+                <div class="settings-card-head"><h3>All Staff Accounts</h3></div>
+                <div class="settings-card-body" style="padding:0;">
+                  <table><thead><tr><th>Username</th><th>Role</th><th>Status</th></tr></thead><tbody id="account-list-body"></tbody></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- BARANGAY -->
+            <div id="sp-barangay" style="display:none;">
+              <div class="settings-card"><div class="settings-card-head"><h3>Basic Information</h3></div><div class="settings-card-body"><div class="form-row"><div class="form-group"><label>Barangay Name</label><input type="text" id="barangay-name"/></div><div class="form-group"><label>Municipality / City</label><input type="text" id="barangay-city"/></div></div><div class="form-row"><div class="form-group"><label>Province</label><input type="text" id="barangay-province"/></div><div class="form-group"><label>ZIP Code</label><input type="text" id="barangay-zip"/></div></div><div class="form-group" style="margin-bottom:14px;"><label>Full Address</label><input type="text" id="barangay-address"/></div><button class="save-btn" id="save-barangay-basic-btn">Save Changes</button></div></div>
+              <div class="settings-card"><div class="settings-card-head"><h3>Contact Information</h3></div><div class="settings-card-body"><div class="form-row"><div class="form-group"><label>Contact Number</label><input type="text" id="barangay-contact"/></div><div class="form-group"><label>Email Address</label><input type="email" id="barangay-email"/></div></div><button class="save-btn" id="save-barangay-contact-btn">Save Changes</button></div></div>
+            </div>
+
+            <!-- DOCUMENT -->
+            <div id="sp-document" style="display:none;">
+              <div class="settings-card"><div class="settings-card-head"><h3>Document Settings</h3></div><div class="settings-card-body"><div class="form-row"><div class="form-group"><label>Default Document Header</label><input type="text" id="doc-header"/></div><div class="form-group"><label>Signatory Name</label><input type="text" id="doc-signatory"/></div></div><button class="save-btn" id="save-document-settings-btn">Save Changes</button></div></div>
+            </div>
+
+            <!-- BACKUP -->
+            <div id="sp-backup" style="display:none;">
+              <div class="settings-card"><div class="settings-card-head"><h3>Backup &amp; Restore</h3></div><div class="settings-card-body" style="display:flex;flex-direction:column;gap:12px;"><p style="font-size:12px;color:#5a6478;">Create a backup of all system data or restore from a previous backup.</p><button class="save-btn" style="width:fit-content;" id="download-backup-btn">Download Backup</button><div class="form-group"><label>Restore from file</label><input type="file" id="restore-file-input" accept=".json"/></div><button class="save-btn danger" style="width:fit-content;" id="restore-backup-btn">Restore Backup</button><p class="helper-text" id="backup-status-text">No recent backup action.</p></div></div>
+            </div>
+
+            <!-- SYSTEM -->
+            <div id="sp-system" style="display:none;">
+              <div class="settings-card"><div class="settings-card-head"><h3>System Preference</h3></div><div class="settings-card-body"><div class="form-row"><div class="form-group"><label>Language</label><select id="system-language"><option>Filipino</option><option>English</option></select></div><div class="form-group"><label>Date Format</label><select id="system-date-format"><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select></div></div><button class="save-btn" id="save-system-btn">Save Changes</button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h3 id="modal-title">Modal</h3><button class="modal-close" id="modal-close-btn">&times;</button></div><div class="modal-body" id="modal-body"></div><div class="modal-foot" id="modal-foot"></div></div></div>
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <script>
+    // ──────────────────────────────────────────────────────────────────────────
+    // STATE
+    // ──────────────────────────────────────────────────────────────────────────
+    const state = {
+      activePage: 'page-home',
+      archiveTab: 'residents',
+      residentSearch: '', householdSearch: '', docSearch: '', archiveSearch: '',
+      residentZone: 'All Zones', docStatus: 'All Status', docType: 'All Types',
+      residents: [], households: [], documents: [], users: [],
+      notifications: [],
+      settings: { barangay: {}, document: {}, system: { language: 'Filipino', dateFormat: 'MM/DD/YYYY' } },
+      me: null,
+    };
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // UTILITIES
+    // ──────────────────────────────────────────────────────────────────────────
+    function initials(name) {
+      return String(name).split(' ').filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
+    }
+    function esc(v) {
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function formatDate(d) {
+      const dt = new Date(d + 'T00:00:00');
+      const m = String(dt.getMonth()+1).padStart(2,'0'), dd = String(dt.getDate()).padStart(2,'0'), y = dt.getFullYear();
+      const fmt = state.settings.system?.dateFormat || 'MM/DD/YYYY';
+      if (fmt === 'DD/MM/YYYY') return dd+'/'+m+'/'+y;
+      if (fmt === 'YYYY-MM-DD') return y+'-'+m+'-'+dd;
+      return m+'/'+dd+'/'+y;
+    }
+    function panelDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+
+    function showToast(title, text, type='success') {
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.innerHTML = '<div class="toast-title">'+esc(title)+'</div><div class="toast-text">'+esc(text)+'</div>';
+      document.getElementById('toast-stack').appendChild(t);
+      setTimeout(() => t.remove(), 3400);
+    }
+
+    function openModal(title, bodyHtml, actions=[]) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerHTML = bodyHtml;
+      const foot = document.getElementById('modal-foot');
+      foot.innerHTML = '';
+      actions.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = a.className || 'ghost-btn';
+        btn.textContent = a.label;
+        if (a.style) btn.setAttribute('style', a.style);
+        btn.addEventListener('click', a.onClick);
+        foot.appendChild(btn);
+      });
+      document.getElementById('modal-backdrop').classList.add('open');
+      document.body.classList.add('modal-open');
+    }
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.remove('open');
+      document.body.classList.remove('modal-open');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // API
+    // ──────────────────────────────────────────────────────────────────────────
+    async function api(resource, body) {
+      const res = await fetch('api.php?resource='+encodeURIComponent(resource), {
+        method: body ? 'POST' : 'GET',
+        headers: { Accept: 'application/json', ...(body ? {'Content-Type':'application/json'} : {}) },
+        ...(body ? { body: JSON.stringify(body) } : {})
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.success) throw new Error(payload.error || 'Request failed.');
+      return payload.data;
+    }
+
+    function applyBootstrap(data) {
+      if (!data) return;
+      if (Array.isArray(data.residents))  state.residents  = data.residents;
+      if (Array.isArray(data.households)) state.households = data.households;
+      if (Array.isArray(data.documents))  state.documents  = data.documents;
+      if (Array.isArray(data.users))      state.users      = data.users;
+      if (Array.isArray(data.notifications)) state.notifications = data.notifications;
+      if (data.settings) {
+        state.settings = { ...state.settings, ...data.settings };
+      }
+      if (data.me) state.me = data.me;
+    }
+
+    async function syncFromServer(resource, body) {
+      applyBootstrap(await api(resource, body));
+      refreshUI();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // AVATAR HELPERS
+    // ──────────────────────────────────────────────────────────────────────────
+    function avatarHtml(hasPhoto, userId, fallbackInitials, size='22px') {
+      if (hasPhoto) {
+        return `<img src="api.php?resource=profile-photo-get&userId=${userId}&t=${Date.now()}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      }
+      return `<span style="font-size:9px;font-weight:700">${esc(fallbackInitials)}</span>`;
+    }
+
+    function updateTopbarAvatars() {
+      const me = state.me;
+      if (!me) return;
+      const ini = initials(me.fullName || me.username);
+      const pages = ['home','residents','households','docs','archive','settings'];
+      pages.forEach(p => {
+        const av = document.getElementById('topbar-avatar-' + p);
+        const nm = document.getElementById('topbar-name-' + p);
+        if (av) av.innerHTML = avatarHtml(me.hasPhoto, me.dbId, ini);
+        if (nm) nm.textContent = me.username || '–';
+      });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SIDEBAR
+    // ──────────────────────────────────────────────────────────────────────────
+    function buildSidebar(activePage) {
+      const me = state.me;
+      const pendingCount = state.documents.filter(d => !d.archived && d.status === 'Pending').length;
+      const icons = {
+        home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+        people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+        settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2M20 12h2"/></svg>'
+      };
+
+      const navItems = [
+        { page:'page-home', icon:'home', label:'Home' },
+        { page:'page-residents', icon:'people', label:'Residents', sub:[
+          { page:'page-residents', label:'Residents List' },
+          { page:'page-households', label:'Households' }
+        ]},
+        { page:'page-docrequests', icon:'doc', label:'Document Requests', badge: pendingCount > 0 ? String(pendingCount) : '' },
+        { page:'page-archive', icon:'archive', label:'Archive' },
+        { page:'page-settings', icon:'settings', label:'Settings' }
+      ];
+
+      let html = '<div class="sidebar-brand"><div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="brand-text"><div class="name">Barangay Management</div><div class="sub">System</div></div></div><div class="nav-section"><div class="nav-label">Main</div>';
+
+      navItems.forEach(item => {
+        const isActive = activePage === item.page || (item.sub && item.sub.some(s => s.page === activePage));
+        html += `<button class="nav-item${isActive && !item.sub ? ' active' : ''}" onclick="goTo('${item.page}')">${icons[item.icon]}${item.label}${item.badge ? '<span class="nav-badge">'+item.badge+'</span>' : ''}</button>`;
+        if (item.sub) {
+          html += '<div class="nav-sub">';
+          item.sub.forEach(s => {
+            html += `<button class="nav-item${activePage === s.page ? ' active' : ''}" onclick="goTo('${s.page}')">${s.label}</button>`;
+          });
+          html += '</div>';
+        }
+        if (item.icon === 'people') html += '<div class="nav-label">Documents</div>';
+        if (item.icon === 'doc') html += '<div class="nav-label">More</div>';
+      });
+
+      html += '</div>';
+
+      // Sidebar user info + logout
+      if (me) {
+        const ini = initials(me.fullName || me.username);
+        html += `<div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-user-avatar">${avatarHtml(me.hasPhoto, me.dbId, ini, '34px')}</div>
+            <div class="sidebar-user-info">
+              <div class="name">${esc(me.fullName || me.username)}</div>
+              <div class="role">${esc(me.position || me.role)}</div>
+            </div>
+          </div>
+          <button class="logout-btn" id="logout-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log Out
+          </button>
+        </div>`;
+      }
+
+      return html;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NAVIGATION
+    // ──────────────────────────────────────────────────────────────────────────
+    function goTo(pageId) {
+      state.activePage = pageId;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      document.querySelectorAll('.sidebar').forEach(s => {
+        const pid = 'page-' + s.id.replace('sidebar-', '');
+        s.innerHTML = buildSidebar(state.activePage === pid ? pageId : pid);
+      });
+      attachSidebarActions();
+      closeSidebar();
+      window.scrollTo(0,0);
+      if (pageId === 'page-archive') renderArchive();
+    }
+
+    function openSidebar(id) {
+      document.getElementById(id).classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+    }
+    function closeSidebar() {
+      document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('open'));
+      document.getElementById('overlay').classList.remove('open');
+    }
+
+    function attachSidebarActions() {
+      document.querySelectorAll('#logout-btn').forEach(btn => {
+        btn.onclick = async () => {
+          try {
+            await fetch('auth.php?action=logout', { method: 'POST' });
+          } catch (_) {}
+          window.location.href = 'login.html';
+        };
+      });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // FILTERS
+    // ──────────────────────────────────────────────────────────────────────────
+    function getVisibleResidents() {
+      return state.residents.filter(r => {
+        if (r.archived) return false;
+        if (state.residentZone !== 'All Zones' && r.zone !== state.residentZone) return false;
+        return [r.id, r.fullName, r.address, r.household, r.zone, r.status, r.gender, r.civilStatus, r.contact].join(' ').toLowerCase().includes(state.residentSearch.toLowerCase());
+      });
+    }
+    function getVisibleHouseholds() {
+      return state.households.filter(h =>
+        [h.id, h.head, h.address, String(h.members)].join(' ').toLowerCase().includes(state.householdSearch.toLowerCase())
+      );
+    }
+    function getVisibleDocs() {
+      return state.documents.filter(d => {
+        if (d.archived) return false;
+        if (state.docStatus !== 'All Status' && d.status !== state.docStatus) return false;
+        if (state.docType !== 'All Types' && d.type !== state.docType) return false;
+        return [d.id, d.name, d.type, d.status, formatDate(d.dateRequested)].join(' ').toLowerCase().includes(state.docSearch.toLowerCase());
+      });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ──────────────────────────────────────────────────────────────────────────
+    function renderDashboard() {
+      const active = state.residents.filter(r => !r.archived);
+      const activeDocs = state.documents.filter(d => !d.archived);
+      const recentR = [...active].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+      const recentD = [...activeDocs].sort((a,b)=>new Date(b.dateRequested)-new Date(a.dateRequested)).slice(0,5);
+
+      document.getElementById('dashboard-total-residents').textContent = active.length.toLocaleString();
+      document.getElementById('dashboard-total-households').textContent = state.households.length.toLocaleString();
+      document.getElementById('dashboard-approved-docs').textContent = activeDocs.filter(d=>d.status==='Approved'||d.status==='Released').length.toLocaleString();
+      document.getElementById('dashboard-pending-docs').textContent = activeDocs.filter(d=>d.status==='Pending').length.toLocaleString();
+      document.getElementById('dashboard-residents-trend').textContent = '↑ ' + recentR.length + ' added recently';
+      document.getElementById('dashboard-households-trend').textContent = state.households.length + ' total active records';
+
+      document.getElementById('recent-documents-panel').innerHTML = recentD.length
+        ? recentD.map(d => `<div class="doc-row"><div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="doc-info"><div class="doc-name">${esc(d.type)}</div><div class="doc-meta">${esc(d.name)} · ${esc(panelDate(d.dateRequested))}</div></div><span class="badge ${d.status.toLowerCase()}">${esc(d.status)}</span></div>`).join('')
+        : '<div class="empty-state">No recent document requests.</div>';
+
+      document.getElementById('recent-residents-panel').innerHTML = recentR.length
+        ? recentR.map((r, i) => `<div class="res-row"><div class="avatar"${i%2?' style="background:#9a3543"':''}>${esc(initials(r.fullName))}</div><div class="res-info"><div class="res-name">${esc(r.fullName)}</div><div class="res-address">${esc(r.address)}</div></div><div class="res-hh">${esc(r.household||'–')}</div></div>`).join('')
+        : '<div class="empty-state">No recent residents found.</div>';
+    }
+
+    function renderResidents() {
+      const vis = getVisibleResidents();
+      document.getElementById('resident-total-stat').textContent = state.residents.filter(r=>!r.archived).length.toLocaleString();
+      document.getElementById('resident-household-stat').textContent = state.households.length.toLocaleString();
+      document.getElementById('resident-stat-trend').textContent = vis.length + ' record(s) shown';
+
+      document.getElementById('residents-table-body').innerHTML = vis.length
+        ? vis.map(r => `<tr>
+            <td>${esc(r.id)}</td>
+            <td>${esc(r.fullName)}</td>
+            <td>${r.birthday ? esc(formatDate(r.birthday)) : '–'}</td>
+            <td>${esc(r.gender||'–')}</td>
+            <td>${esc(r.civilStatus||'–')}</td>
+            <td>${esc(r.address)}</td>
+            <td>${esc(r.contact||'–')}</td>
+            <td>${esc(r.household||'–')}</td>
+            <td>${esc(r.zone)}</td>
+            <td><span class="badge ${r.status.toLowerCase()}">${esc(r.status)}</span></td>
+            <td><div class="tbl-actions">
+              <button class="action-btn view" onclick="viewResident('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn edit" onclick="showResidentForm('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="action-btn del" onclick="archiveResident('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+            </div></td>
+          </tr>`).join('')
+        : '<tr><td colspan="11" class="empty-state">No residents found.</td></tr>';
+    }
+
+    function renderHouseholds() {
+      const vis = getVisibleHouseholds();
+      document.getElementById('household-resident-stat').textContent = state.residents.filter(r=>!r.archived).length.toLocaleString();
+      document.getElementById('household-total-stat').textContent = state.households.length.toLocaleString();
+
+      document.getElementById('households-table-body').innerHTML = vis.length
+        ? vis.map(h => {
+            // Get linked residents
+            const linked = state.residents.filter(r => !r.archived && r.householdId === h.dbId);
+            const memberDisplay = linked.length > 0
+              ? linked.map(r => `<span class="hh-member-tag">${esc(r.fullName)}</span>`).join('')
+              : `<span style="color:#8892a4;font-size:11px;">${h.members} member(s)</span>`;
+            return `<tr>
+              <td>${esc(h.id)}</td>
+              <td>${esc(h.head)}</td>
+              <td>${esc(h.address)}</td>
+              <td>${memberDisplay}</td>
+              <td><div class="tbl-actions">
+                <button class="action-btn view" onclick="viewHousehold('${h.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="action-btn edit" onclick="showHouseholdForm('${h.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                <button class="action-btn del" onclick="deleteHousehold('${h.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+              </div></td>
+            </tr>`;
+          }).join('')
+        : '<tr><td colspan="5" class="empty-state">No households found.</td></tr>';
+    }
+
+    function renderDocuments() {
+      const vis = getVisibleDocs();
+      document.getElementById('docs-table-body').innerHTML = vis.length
+        ? vis.map(d => `<tr>
+            <td>${esc(d.id)}</td>
+            <td>${esc(d.name)}</td>
+            <td>${esc(d.type)}</td>
+            <td>${esc(formatDate(d.dateRequested))}</td>
+            <td><span class="badge ${d.status.toLowerCase()}">${esc(d.status)}</span></td>
+            <td><div class="tbl-actions">
+              <button class="action-btn view" onclick="viewDocument('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              ${!d.releasedAt ? `<button class="action-btn edit" onclick="showDocumentForm('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+              ${!d.releasedAt ? `<button class="action-btn" title="Release Document" onclick="showReleaseForm('${d.id}')" style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg></button>` : `<button class="action-btn" title="Already Released" disabled style="background:#f4f6fb;color:#b0bec5;border:1px solid #d1d9e6;cursor:not-allowed;opacity:0.6;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg></button>`}
+              <button class="action-btn del" onclick="archiveDocument('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+            </div></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" class="empty-state">No document requests found.</td></tr>';
+    }
+
+    function renderArchive() {
+      const arR = state.residents.filter(r => r.archived && [r.id,r.fullName,r.address,r.household].join(' ').toLowerCase().includes(state.archiveSearch.toLowerCase()));
+      const arD = state.documents.filter(d => d.archived && [d.id,d.name,d.type,d.status,formatDate(d.dateRequested)].join(' ').toLowerCase().includes(state.archiveSearch.toLowerCase()));
+
+      document.getElementById('archive-resident-count').textContent = state.residents.filter(r=>r.archived).length;
+      document.getElementById('archive-doc-count').textContent = state.documents.filter(d=>d.archived).length;
+
+      document.getElementById('archive-residents-body').innerHTML = arR.length
+        ? arR.map(r => `<tr><td>${esc(r.id)}</td><td>${esc(r.fullName)}</td><td>${esc(r.address)}</td><td>${esc(r.household)}</td><td><div class="tbl-actions">
+            <button class="action-btn view" onclick="viewResident('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="action-btn edit" onclick="restoreResident('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9"/></svg></button>
+          </div></td></tr>`).join('')
+        : '<tr><td colspan="5" class="empty-state">No archived residents.</td></tr>';
+
+      document.getElementById('archive-docs-body').innerHTML = arD.length
+        ? arD.map(d => `<tr><td>${esc(d.id)}</td><td>${esc(d.name)}</td><td>${esc(d.type)}</td><td>${esc(formatDate(d.dateRequested))}</td><td><span class="badge ${d.status.toLowerCase()}">${esc(d.status)}</span></td><td><div class="tbl-actions">
+            <button class="action-btn view" onclick="viewDocument('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="action-btn edit" onclick="restoreDocument('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9"/></svg></button>
+          </div></td></tr>`).join('')
+        : '<tr><td colspan="6" class="empty-state">No archived documents.</td></tr>';
+
+      switchArchive(state.archiveTab);
+    }
+
+    function renderSettings() {
+      const me = state.me;
+      if (me) {
+        const el = document.getElementById('account-username'); if (el) el.value = me.username || '';
+        const fn = document.getElementById('account-fullname'); if (fn) fn.value = me.fullName || '';
+        const rl = document.getElementById('account-role'); if (rl) rl.value = me.position || me.role || '';
+        const em = document.getElementById('account-email'); if (em) em.value = me.email || '';
+        const ct = document.getElementById('account-contact'); if (ct) ct.value = me.contact || '';
+
+        // Profile photo preview
+        const preview = document.getElementById('profile-preview');
+        if (preview) {
+          if (me.hasPhoto) {
+            preview.innerHTML = `<img src="api.php?resource=profile-photo-get&userId=${me.dbId}&t=${Date.now()}" alt="Profile">`;
+          } else {
+            preview.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+          }
+        }
+      }
+
+      // Users list
+      const body = document.getElementById('account-list-body');
+      if (body) {
+        body.innerHTML = state.users.map(u => `<tr>
+          <td><strong>${esc(u.username)}</strong></td>
+          <td>${esc(u.position || u.role)}</td>
+          <td>${u.isOnline
+            ? '<span style="color:#469117;font-weight:700;font-size:11px;">● Active</span>'
+            : '<span style="color:#8892a4;font-size:11px;">Offline</span>'
+          }</td>
+        </tr>`).join('');
+      }
+
+      const bg = state.settings.barangay || {};
+      const docS = state.settings.document || {};
+      const sys = state.settings.system || {};
+
+      const setV = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+      setV('barangay-name', bg.name); setV('barangay-city', bg.city); setV('barangay-province', bg.province);
+      setV('barangay-zip', bg.zip); setV('barangay-address', bg.address);
+      setV('barangay-contact', bg.contact); setV('barangay-email', bg.email);
+      setV('doc-header', docS.header); setV('doc-signatory', docS.signatory);
+      setV('system-language', sys.language); setV('system-date-format', sys.dateFormat);
+    }
+
+    function renderFilters() {
+      const zones = [...new Set(state.residents.filter(r=>!r.archived).map(r=>r.zone))].sort();
+      const zf = document.getElementById('resident-zone-filter');
+      if (zf) {
+        zf.innerHTML = '<option>All Zones</option>' + zones.map(z=>`<option>${esc(z)}</option>`).join('');
+        zf.value = zones.includes(state.residentZone) ? state.residentZone : 'All Zones';
+      }
+      const types = [...new Set(state.documents.filter(d=>!d.archived).map(d=>d.type))].sort();
+      const tf = document.getElementById('doc-type-filter');
+      if (tf) {
+        tf.innerHTML = '<option>All Types</option>' + types.map(t=>`<option>${esc(t)}</option>`).join('');
+        tf.value = types.includes(state.docType) ? state.docType : 'All Types';
+      }
+    }
+
+    function refreshUI() {
+      renderFilters();
+      renderDashboard();
+      renderResidents();
+      renderHouseholds();
+      renderDocuments();
+      if (state.activePage === 'page-archive') renderArchive();
+      renderSettings();
+      updateTopbarAvatars();
+      document.querySelectorAll('.sidebar').forEach(s => {
+        const pid = 'page-' + s.id.replace('sidebar-', '');
+        s.innerHTML = buildSidebar(state.activePage === pid ? state.activePage : pid);
+      });
+      attachSidebarActions();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SWITCH HELPERS
+    // ──────────────────────────────────────────────────────────────────────────
+    function switchArchive(tab) {
+      state.archiveTab = tab;
+      document.getElementById('arch-residents-table').style.display = tab==='residents'?'block':'none';
+      document.getElementById('arch-docs-table').style.display = tab==='docs'?'block':'none';
+      document.getElementById('arch-tab-res').style.background = tab==='residents'?'#152354':'#8892a4';
+      document.getElementById('arch-tab-docs').style.background = tab==='docs'?'#152354':'#8892a4';
+    }
+
+    function switchSettings(tab, btn) {
+      ['account','barangay','document','backup','system'].forEach(n => {
+        const el = document.getElementById('sp-'+n);
+        if (el) { el.style.display = n===tab ? 'flex' : 'none'; if (n===tab) el.style.flexDirection='column'; }
+      });
+      document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // FORMS — RESIDENTS
+    // ──────────────────────────────────────────────────────────────────────────
+    function showResidentForm(id='') {
+      const r = state.residents.find(x => x.id===id && !x.archived) || { dbId:null, fullName:'', birthday:'', gender:'', civilStatus:'', address:'', contact:'', householdId:null, zone:'Zone 1', status:'Active' };
+
+      // Build household dropdown
+      const hhOptions = state.households.map(h =>
+        `<option value="${h.dbId}" ${r.householdId===h.dbId?'selected':''}>${esc(h.id)} — ${esc(h.head)}</option>`
+      ).join('');
+
+      const body = `
+        <div class="form-row">
+          <div class="form-group"><label>Full Name *</label><input type="text" id="modal-res-name" value="${esc(r.fullName)}"></div>
+          <div class="form-group"><label>Birthday</label><input type="date" id="modal-res-birthday" value="${esc(r.birthday||'')}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="modal-res-gender">
+              <option value="">— Select —</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Civil Status</label>
+            <select id="modal-res-civil">
+              <option value="">— Select —</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Widowed">Widowed</option>
+              <option value="Separated">Separated</option>
+              <option value="Annulled">Annulled</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Address *</label><input type="text" id="modal-res-address" value="${esc(r.address)}"></div>
+          <div class="form-group"><label>Contact Number</label><input type="text" id="modal-res-contact" value="${esc(r.contact||'')}" placeholder="+63 9XX XXX XXXX"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Household (optional)</label>
+            <select id="modal-res-household">
+              <option value="">— None —</option>
+              ${hhOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Zone</label>
+            <select id="modal-res-zone">
+              <option>Zone 1</option><option>Zone 2</option><option>Zone 3</option><option>Zone 4</option><option>Zone 5</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="modal-res-status"><option>Active</option><option>Inactive</option></select>
+        </div>`;
+
+      openModal(id ? 'Edit Resident' : 'Add Resident', body, [
+        { label: 'Cancel', className: 'ghost-btn', onClick: closeModal },
+        { label: id ? 'Save Changes' : 'Add Resident', className: 'save-btn', onClick: async () => {
+          const fullName    = document.getElementById('modal-res-name').value.trim();
+          const address     = document.getElementById('modal-res-address').value.trim();
+          const birthday    = document.getElementById('modal-res-birthday').value;
+          const gender      = document.getElementById('modal-res-gender').value;
+          const civilStatus = document.getElementById('modal-res-civil').value;
+          const contact     = document.getElementById('modal-res-contact').value.trim();
+          const hhSelect    = document.getElementById('modal-res-household');
+          const householdId = hhSelect.value ? parseInt(hhSelect.value) : null;
+          const zone        = document.getElementById('modal-res-zone').value;
+          const status      = document.getElementById('modal-res-status').value;
+          if (!fullName || !address) return showToast('Incomplete', 'Name and address are required.', 'error');
+          try {
+            await syncFromServer('resident-save', { dbId: r.dbId, fullName, birthday, gender, civilStatus, address, contact, householdId, zone, status });
+            closeModal();
+            showToast(id ? 'Resident updated' : 'Resident added', fullName + (id ? ' was updated.' : ' was added.'));
+          } catch (e) { showToast('Save failed', e.message, 'error'); }
+        }}
+      ]);
+
+      document.getElementById('modal-res-zone').value   = r.zone || 'Zone 1';
+      document.getElementById('modal-res-status').value = r.status || 'Active';
+      document.getElementById('modal-res-gender').value = r.gender || '';
+      document.getElementById('modal-res-civil').value  = r.civilStatus || '';
+    }
+
+    async function archiveResident(id) {
+      const r = state.residents.find(x => x.id===id && !x.archived);
+      if (!r) return;
+      try {
+        await syncFromServer('resident-archive', { dbId: r.dbId });
+        showToast('Archived', r.fullName + ' was moved to archive.');
+      } catch (e) { showToast('Failed', e.message, 'error'); }
+    }
+
+    async function restoreResident(id) {
+      const r = state.residents.find(x => x.id===id && x.archived);
+      if (!r) return;
+      try {
+        await syncFromServer('resident-restore', { dbId: r.dbId });
+        showToast('Restored', r.fullName + ' is active again.');
+      } catch (e) { showToast('Failed', e.message, 'error'); }
+    }
+
+    function viewResident(id) {
+      const r = state.residents.find(x => x.id===id);
+      if (!r) return;
+      const linked = r.householdId
+        ? state.households.find(h => h.dbId===r.householdId)
+        : null;
+
+      const archivedHtml = r.archived && r.archivedAt
+        ? `<div class="detail-card" style="grid-column:span 2"><div class="detail-label">Archived At</div><div class="detail-value">${esc(r.archivedAt.replace('T',' '))}</div></div>`
+        : '';
+
+      openModal('Resident Details', `
+        <div class="detail-grid">
+          <div class="detail-card"><div class="detail-label">Resident ID</div><div class="detail-value">${esc(r.id)}</div></div>
+          <div class="detail-card"><div class="detail-label">Full Name</div><div class="detail-value">${esc(r.fullName)}</div></div>
+          <div class="detail-card"><div class="detail-label">Birthday</div><div class="detail-value">${r.birthday ? esc(formatDate(r.birthday)) : '—'}</div></div>
+          <div class="detail-card"><div class="detail-label">Gender</div><div class="detail-value">${esc(r.gender||'—')}</div></div>
+          <div class="detail-card"><div class="detail-label">Civil Status</div><div class="detail-value">${esc(r.civilStatus||'—')}</div></div>
+          <div class="detail-card"><div class="detail-label">Contact Number</div><div class="detail-value">${esc(r.contact||'—')}</div></div>
+          <div class="detail-card" style="grid-column:span 2"><div class="detail-label">Address</div><div class="detail-value">${esc(r.address)}</div></div>
+          <div class="detail-card"><div class="detail-label">Household</div><div class="detail-value">${linked ? esc(linked.id + ' — ' + linked.head) : esc(r.household || '—')}</div></div>
+          <div class="detail-card"><div class="detail-label">Zone</div><div class="detail-value">${esc(r.zone)}</div></div>
+          <div class="detail-card"><div class="detail-label">Status</div><div class="detail-value">${esc(r.status)}</div></div>
+          ${archivedHtml}
+        </div>`, [{ label:'Close', className:'save-btn', onClick:closeModal }]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // FORMS — HOUSEHOLDS
+    // ──────────────────────────────────────────────────────────────────────────
+    function showHouseholdForm(id='') {
+      const h = state.households.find(x => x.id===id) || { dbId:null, head:'', address:'' };
+      openModal(id ? 'Edit Household' : 'Add Household', `
+        <div class="form-row">
+          <div class="form-group"><label>Household Head</label><input type="text" id="modal-hh-head" value="${esc(h.head)}"></div>
+          <div class="form-group"><label>Address</label><input type="text" id="modal-hh-address" value="${esc(h.address)}"></div>
+        </div>
+        <p style="font-size:11px;color:#8892a4;margin-top:6px;">Residents are linked from the Residents page by selecting this household when adding/editing a resident.</p>`,
+      [
+        { label:'Cancel', className:'ghost-btn', onClick:closeModal },
+        { label: id ? 'Save Household' : 'Add Household', className:'save-btn', onClick: async () => {
+          const head = document.getElementById('modal-hh-head').value.trim();
+          const address = document.getElementById('modal-hh-address').value.trim();
+          if (!head || !address) return showToast('Incomplete', 'Head name and address are required.', 'error');
+          try {
+            await syncFromServer('household-save', { dbId: h.dbId, head, address });
+            closeModal();
+            showToast(id ? 'Household updated' : 'Household added', id ? head + '\'s household updated.' : 'New household created.');
+          } catch (e) { showToast('Save failed', e.message, 'error'); }
+        }}
+      ]);
+    }
+
+    async function deleteHousehold(id) {
+      const h = state.households.find(x => x.id===id);
+      if (!h) return;
+      try {
+        await syncFromServer('household-delete', { dbId: h.dbId });
+        showToast('Deleted', h.head + '\'s household was removed.');
+      } catch (e) { showToast('Failed', e.message, 'error'); }
+    }
+
+    function viewHousehold(id) {
+      const h = state.households.find(x => x.id===id);
+      if (!h) return;
+      const residents = state.residents.filter(r => !r.archived && r.householdId===h.dbId);
+      const memberHtml = residents.length
+        ? residents.map(r => `<span class="hh-member-tag">${esc(r.fullName)}</span>`).join(' ')
+        : '<span style="color:#8892a4">No linked residents yet.</span>';
+      openModal('Household Details', `
+        <div class="detail-grid">
+          <div class="detail-card"><div class="detail-label">Household ID</div><div class="detail-value">${esc(h.id)}</div></div>
+          <div class="detail-card"><div class="detail-label">Household Head</div><div class="detail-value">${esc(h.head)}</div></div>
+          <div class="detail-card" style="grid-column:span 2"><div class="detail-label">Address</div><div class="detail-value">${esc(h.address)}</div></div>
+          <div class="detail-card" style="grid-column:span 2"><div class="detail-label">Linked Residents (${residents.length})</div><div class="detail-value" style="margin-top:4px">${memberHtml}</div></div>
+        </div>`, [{ label:'Close', className:'save-btn', onClick:closeModal }]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // FORMS — DOCUMENTS
+    // ──────────────────────────────────────────────────────────────────────────
+    function showDocumentForm(id='') {
+      const d = state.documents.find(x => x.id===id && !x.archived) || { dbId:null, name:'', type:'Barangay Clearance', dateRequested:new Date().toISOString().slice(0,10), status:'Pending', notes:'', rejectionReason:'', hasProof:false };
+
+      // If editing a Released document, show confirmation option to re-edit
+      if (id && d.releasedAt) {
+        return openModal('Re-edit Released Document', `
+          <div style="padding:14px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:13px;color:#5d4037;margin-bottom:14px;">
+            <strong>⚠️ This document has already been released.</strong><br>
+            Re-editing will clear the release record (released date, recipient, proof photo) and reset this document to the selected status. This action cannot be undone.
+          </div>
+          <div style="padding:10px 12px;background:#f4f6fb;border-radius:8px;font-size:13px;color:#152354;margin-bottom:14px;">
+            <strong>${esc(d.name)}</strong> — ${esc(d.type)}<br>
+            <span style="color:#8892a4;font-size:12px;">Request ID: ${esc(d.id)}</span>
+          </div>
+          <div class="form-group">
+            <label>New Status</label>
+            <select id="modal-doc-status-reedited">
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-group" id="re-rejection-group" style="display:none;">
+            <label>Reason for Rejection *</label>
+            <textarea id="modal-doc-rejection-reedited" rows="3" style="width:100%;padding:8px 10px;border:1px solid #d1d9e6;border-radius:8px;font-size:14px;resize:vertical;">${esc(d.rejectionReason||'')}</textarea>
+          </div>`,
+          [
+            { label:'Cancel', className:'ghost-btn', onClick:closeModal },
+            { label:'⚠️ Confirm Re-edit', className:'save-btn', style:'background:#e65100;', onClick: async () => {
+              const status = document.getElementById('modal-doc-status-reedited').value;
+              const rejectionReason = document.getElementById('modal-doc-rejection-reedited')?.value.trim() || '';
+              if (status === 'Rejected' && !rejectionReason) return showToast('Required', 'Please provide a reason for rejection.', 'error');
+              try {
+                await syncFromServer('document-save', { dbId: d.dbId, status, rejectionReason, allowReleasedEdit: true });
+                closeModal();
+                showToast('Document re-edited', 'Release record cleared. Document is now ' + status + '.');
+              } catch(e) { showToast('Failed', e.message, 'error'); }
+            }}
+          ]
+        );
+
+        // Toggle rejection reason box
+        setTimeout(() => {
+          const sel = document.getElementById('modal-doc-status-reedited');
+          if (sel) {
+            const toggle = () => {
+              document.getElementById('re-rejection-group').style.display = sel.value === 'Rejected' ? 'block' : 'none';
+            };
+            sel.addEventListener('change', toggle);
+            sel.value = d.status === 'Released' ? 'Approved' : d.status;
+            toggle();
+          }
+        }, 0);
+        return;
+      }
+
+      if (id) {
+        // EDIT MODE: only status changeable + rejection reason + proof upload
+        const body = `
+          <div class="form-group" style="margin-bottom:14px;">
+            <label style="font-size:11px;color:#8892a4;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Resident Name</label>
+            <div style="padding:8px 10px;background:#f4f6fb;border-radius:8px;font-size:14px;color:#152354;">${esc(d.name)}</div>
+          </div>
+          <div class="form-row" style="margin-bottom:14px;">
+            <div>
+              <label style="font-size:11px;color:#8892a4;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Document Type</label>
+              <div style="padding:8px 10px;background:#f4f6fb;border-radius:8px;font-size:14px;color:#152354;">${esc(d.type)}</div>
+            </div>
+            <div>
+              <label style="font-size:11px;color:#8892a4;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Date Requested</label>
+              <div style="padding:8px 10px;background:#f4f6fb;border-radius:8px;font-size:14px;color:#152354;">${esc(formatDate(d.dateRequested))}</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="modal-doc-status">
+              <option>Pending</option><option>Approved</option><option>Rejected</option>
+            </select>
+          </div>
+          <div class="form-group" id="rejection-reason-group" style="display:none;">
+            <label>Reason for Rejection *</label>
+            <textarea id="modal-doc-rejection" rows="3" style="width:100%;padding:8px 10px;border:1px solid #d1d9e6;border-radius:8px;font-size:14px;resize:vertical;">${esc(d.rejectionReason||'')}</textarea>
+          </div>`;
+
+        openModal('Edit Document Request', body, [
+          { label:'Cancel', className:'ghost-btn', onClick:closeModal },
+          { label:'Save Changes', className:'save-btn', onClick: async () => {
+            const status = document.getElementById('modal-doc-status').value;
+            const rejectionReason = document.getElementById('modal-doc-rejection')?.value.trim() || '';
+            if (status === 'Rejected' && !rejectionReason) return showToast('Required', 'Please provide a reason for rejection.', 'error');
+
+            try {
+              await syncFromServer('document-save', { dbId: d.dbId, status, rejectionReason });
+              closeModal();
+              showToast('Request updated', 'Document status was updated.');
+            } catch(e) { showToast('Save failed', e.message, 'error'); }
+          }}
+        ]);
+
+        // Set initial values and toggle rejection box
+        document.getElementById('modal-doc-status').value = d.status;
+        const toggleReject = () => {
+          const st = document.getElementById('modal-doc-status').value;
+          document.getElementById('rejection-reason-group').style.display = st === 'Rejected' ? 'block' : 'none';
+        };
+        document.getElementById('modal-doc-status').addEventListener('change', toggleReject);
+        toggleReject();
+
+      } else {
+        // ADD MODE: all fields + notes
+        openModal('New Document Request', `
+          <div class="form-row">
+            <div class="form-group"><label>Resident Name *</label><input type="text" id="modal-doc-name" value="${esc(d.name)}"></div>
+            <div class="form-group"><label>Document Type</label>
+              <select id="modal-doc-type">
+                <option>Barangay Clearance</option><option>Business Permit</option>
+                <option>Certificate of Residency</option><option>Barangay Indigency</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Date Requested *</label><input type="date" id="modal-doc-date" value="${esc(d.dateRequested)}"></div>
+            <div class="form-group"><label>Status</label>
+              <select id="modal-doc-status"><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes / Information</label>
+            <textarea id="modal-doc-notes" rows="3" style="width:100%;padding:8px 10px;border:1px solid #d1d9e6;border-radius:8px;font-size:14px;resize:vertical;" placeholder="Optional notes or additional information about this request...">${esc(d.notes||'')}</textarea>
+          </div>`,
+        [
+          { label:'Cancel', className:'ghost-btn', onClick:closeModal },
+          { label:'Create Request', className:'save-btn', onClick: async () => {
+            const name = document.getElementById('modal-doc-name').value.trim();
+            const type = document.getElementById('modal-doc-type').value;
+            const dateRequested = document.getElementById('modal-doc-date').value;
+            const status = document.getElementById('modal-doc-status').value;
+            const notes = document.getElementById('modal-doc-notes').value.trim();
+            if (!name || !dateRequested) return showToast('Incomplete', 'Name and date are required.', 'error');
+            try {
+              await syncFromServer('document-save', { name, type, dateRequested, status, notes });
+              closeModal();
+              showToast('Request created', 'New document request created.');
+            } catch (e) { showToast('Save failed', e.message, 'error'); }
+          }}
+        ]);
+        document.getElementById('modal-doc-type').value = d.type;
+        document.getElementById('modal-doc-status').value = d.status;
+      }
+    }
+
+    function viewDocument(id) {
+      const d = state.documents.find(x => x.id===id);
+      if (!d) return;
+
+      const isReleased = !!d.releasedAt;
+
+      // Proof of release image — use correct endpoint based on archived state
+      const proofUrl = d.archived
+        ? `api.php?resource=archived-proof-get&docId=${d.dbId}&t=${Date.now()}`
+        : `api.php?resource=document-proof-get&docId=${d.dbId}&t=${Date.now()}`;
+
+      const proofHtml = d.hasProof && d.dbId
+        ? `<div class="detail-card" style="grid-column:span 2">
+             <div class="detail-label">Proof of Release</div>
+             <div class="detail-value" style="margin-top:6px;">
+               <img src="${proofUrl}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid #d1d9e6;" alt="Proof of Release">
+             </div>
+           </div>`
+        : '';
+
+      // Released At / Released By / Processed By — always shown when released
+      const releasedHtml = isReleased
+        ? `<div class="detail-card"><div class="detail-label">Released At</div><div class="detail-value">${esc(d.releasedAt ? d.releasedAt.replace('T',' ') : '—')}</div></div>
+           <div class="detail-card"><div class="detail-label">Released By</div><div class="detail-value">${esc(d.releasedBy||'—')}</div></div>
+           <div class="detail-card"><div class="detail-label">Processed By</div><div class="detail-value">${esc(d.processedBy||'—')}</div></div>`
+        : `<div class="detail-card"><div class="detail-label">Released At</div><div class="detail-value">—</div></div>
+           <div class="detail-card"><div class="detail-label">Released By</div><div class="detail-value">—</div></div>
+           <div class="detail-card"><div class="detail-label">Processed By</div><div class="detail-value">${esc(d.processedBy||'—')}</div></div>`;
+
+      // Rejection reason shown ONLY for rejected status
+      const statusDisplay = d.status === 'Rejected' && d.rejectionReason
+        ? `<span class="badge rejected">${esc(d.status)}</span>
+           <div style="margin-top:6px;font-size:12px;color:#c0392b;padding:6px 8px;background:#fdf3f3;border-left:3px solid #e74c3c;border-radius:4px;">${esc(d.rejectionReason)}</div>`
+        : `<span class="badge ${d.status.toLowerCase()}">${esc(d.status)}</span>`;
+
+      const notesHtml = d.notes
+        ? `<div class="detail-card" style="grid-column:span 2">
+             <div class="detail-label">Notes</div>
+             <div class="detail-value">${esc(d.notes)}</div>
+           </div>`
+        : '';
+
+      // New release details fields shown after Processed By
+      const releaseDetailsHtml = isReleased
+        ? `<div class="detail-card"><div class="detail-label">Recipient Full Name</div><div class="detail-value">${esc(d.recipientName||'—')}</div></div>
+           <div class="detail-card"><div class="detail-label">Relationship to Requester</div><div class="detail-value">${esc(d.relationshipToRequester||'—')}</div></div>`
+        : '';
+
+      // Show archived date if applicable
+      const archivedHtml = d.archived && d.archivedAt
+        ? `<div class="detail-card" style="grid-column:span 2">
+             <div class="detail-label">Archived At</div>
+             <div class="detail-value">${esc(d.archivedAt.replace('T',' '))}</div>
+           </div>`
+        : '';
+
+      const modalButtons = d.archived
+        ? [{ label:'Close', className:'save-btn', onClick:closeModal }]
+        : isReleased
+          ? [{ label:'Close', className:'save-btn', onClick:closeModal }]
+          : [
+              { label:'Close', className:'ghost-btn', onClick:closeModal },
+              { label:'Release Document', className:'save-btn', style:'background:#2e7d32;', onClick:() => { closeModal(); showReleaseForm(id); } }
+            ];
+
+      openModal('Document Request Details', `
+        <div class="detail-grid">
+          <div class="detail-card"><div class="detail-label">Request ID</div><div class="detail-value">${esc(d.id)}</div></div>
+          <div class="detail-card"><div class="detail-label">Resident Name</div><div class="detail-value">${esc(d.name)}</div></div>
+          <div class="detail-card"><div class="detail-label">Document Type</div><div class="detail-value">${esc(d.type)}</div></div>
+          <div class="detail-card"><div class="detail-label">Date Requested</div><div class="detail-value">${esc(formatDate(d.dateRequested))}</div></div>
+          <div class="detail-card"><div class="detail-label">Status</div><div class="detail-value">${statusDisplay}</div></div>
+          <div class="detail-card"><div class="detail-label">Archive State</div><div class="detail-value">${esc(d.archived?'Archived':'Active')}</div></div>
+          ${notesHtml}
+          ${releasedHtml}
+          ${releaseDetailsHtml}
+          ${archivedHtml}
+          ${proofHtml}
+        </div>`, modalButtons);
+    }
+
+    // ── RELEASE FORM ─────────────────────────────────────────────────────────
+    function showReleaseForm(id) {
+      const d = state.documents.find(x => x.id===id && !x.archived);
+      if (!d) return;
+      if (d.releasedAt) return showToast('Already Released', 'This document has already been released.', 'error');
+
+      const body = `
+        <div style="margin-bottom:14px;padding:12px 14px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:13px;color:#5d4037;">
+          <strong>⚠️ Confirm Release</strong><br>Are you sure you want to release this document? Please fill in the details below.
+        </div>
+        <div style="margin-bottom:14px;padding:10px 12px;background:#f4f6fb;border-radius:8px;font-size:13px;color:#152354;">
+          <strong>${esc(d.name)}</strong> — ${esc(d.type)}<br>
+          <span style="color:#8892a4;font-size:12px;">Request ID: ${esc(d.id)}</span>
+        </div>
+        <div class="form-group">
+          <label>Recipient Full Name <span style="color:#e74c3c;">*</span></label>
+          <input type="text" id="release-recipient-name" placeholder="Full name of the person receiving the document" style="width:100%;padding:8px 10px;border:1px solid #d1d9e6;border-radius:8px;font-size:14px;">
+        </div>
+        <div class="form-group">
+          <label>Relationship to Requester <span style="color:#e74c3c;">*</span></label>
+          <select id="release-relationship" style="width:100%;padding:8px 10px;border:1px solid #d1d9e6;border-radius:8px;font-size:14px;">
+            <option value="">— Select relationship —</option>
+            <option value="Self">Self (Requester)</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Parent">Parent</option>
+            <option value="Child">Child</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Relative">Relative</option>
+            <option value="Authorized Representative">Authorized Representative</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Proof of Release (Photo) <span style="color:#8892a4;font-size:11px;">Optional</span></label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <input type="file" id="release-proof-file" accept="image/*" style="display:none;">
+            <button type="button" class="ghost-btn" onclick="document.getElementById('release-proof-file').click()" style="padding:7px 14px;font-size:13px;">Choose Photo</button>
+            <span id="release-proof-name" style="font-size:12px;color:#8892a4;">No file chosen</span>
+          </div>
+          <div id="release-proof-preview" style="margin-top:10px;"></div>
+        </div>`;
+
+      openModal('Release Document', body, [
+        { label:'Cancel', className:'ghost-btn', onClick:closeModal },
+        { label:'Confirm Release', className:'save-btn', style:'background:#2e7d32;', onClick: async () => {
+          const recipientName = document.getElementById('release-recipient-name').value.trim();
+          const relationship  = document.getElementById('release-relationship').value;
+          const proofFile     = document.getElementById('release-proof-file').files[0];
+
+          if (!recipientName) return showToast('Required', 'Please enter the recipient full name.', 'error');
+          if (!relationship)  return showToast('Required', 'Please select the relationship to requester.', 'error');
+
+          try {
+            const fd = new FormData();
+            fd.append('dbId', d.dbId);
+            fd.append('recipientName', recipientName);
+            fd.append('relationshipToRequester', relationship);
+            if (proofFile) fd.append('proof', proofFile);
+
+            const res  = await fetch('api.php?resource=document-release', { method:'POST', body: fd });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            applyBootstrap(data.data);
+            refreshUI();
+            closeModal();
+            showToast('Released', d.id + ' has been successfully released.');
+          } catch(e) { showToast('Release Failed', e.message, 'error'); }
+        }}
+      ]);
+
+      // File preview handler
+      document.getElementById('release-proof-file').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        document.getElementById('release-proof-name').textContent = f.name;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById('release-proof-preview').innerHTML =
+            `<img src="${ev.target.result}" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid #d1d9e6;">`;
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    async function archiveDocument(id) {
+      const d = state.documents.find(x => x.id===id && !x.archived);
+      if (!d) return;
+      try {
+        await syncFromServer('document-archive', { dbId: d.dbId });
+        showToast('Archived', d.id + ' was moved to archive.');
+      } catch (e) { showToast('Failed', e.message, 'error'); }
+    }
+
+    async function restoreDocument(id) {
+      const d = state.documents.find(x => x.id===id && x.archived);
+      if (!d) return;
+      try {
+        await syncFromServer('document-restore', { dbId: d.dbId });
+        showToast('Restored', d.id + ' is active again.');
+      } catch (e) { showToast('Failed', e.message, 'error'); }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SETTINGS ACTIONS
+    // ──────────────────────────────────────────────────────────────────────────
+    function attachSettingsActions() {
+      const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+
+      on('save-account-btn', async () => {
+        try {
+          await syncFromServer('settings-save', { section:'account', values:{
+            username: document.getElementById('account-username').value.trim(),
+            password: document.getElementById('account-password').value,
+            fullName: document.getElementById('account-fullname').value.trim(),
+            email:    document.getElementById('account-email').value.trim(),
+            contact:  document.getElementById('account-contact').value.trim(),
+          }});
+          showToast('Account saved', 'Your profile was updated.');
+        } catch (e) { showToast('Failed', e.message, 'error'); }
+      });
+
+      // Profile photo upload
+      on('choose-profile-file-btn', () => document.getElementById('profile-file-input').click());
+      document.getElementById('profile-file-input').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 3*1024*1024) return showToast('Too large', 'Photo must be under 3 MB.', 'error');
+
+        document.getElementById('upload-progress-text').textContent = 'Uploading…';
+        const fd = new FormData();
+        fd.append('photo', file);
+
+        try {
+          const res = await fetch('api.php?resource=profile-photo', { method:'POST', body: fd });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.error);
+          applyBootstrap(data.data);
+          refreshUI();
+          showToast('Photo updated', file.name + ' was saved as your profile photo.');
+          document.getElementById('upload-progress-text').textContent = '';
+        } catch (err) {
+          showToast('Upload failed', err.message, 'error');
+          document.getElementById('upload-progress-text').textContent = '';
+        }
+      });
+
+      on('save-barangay-basic-btn', async () => {
+        try {
+          await syncFromServer('settings-save', { section:'barangay', values:{
+            name: document.getElementById('barangay-name').value.trim(),
+            city: document.getElementById('barangay-city').value.trim(),
+            province: document.getElementById('barangay-province').value.trim(),
+            zip: document.getElementById('barangay-zip').value.trim(),
+            address: document.getElementById('barangay-address').value.trim(),
+          }});
+          showToast('Saved', 'Barangay basic info updated.');
+        } catch (e) { showToast('Failed', e.message, 'error'); }
+      });
+
+      on('save-barangay-contact-btn', async () => {
+        try {
+          await syncFromServer('settings-save', { section:'barangay', values:{
+            contact: document.getElementById('barangay-contact').value.trim(),
+            email: document.getElementById('barangay-email').value.trim(),
+          }});
+          showToast('Saved', 'Contact details updated.');
+        } catch (e) { showToast('Failed', e.message, 'error'); }
+      });
+
+      on('save-document-settings-btn', async () => {
+        try {
+          await syncFromServer('settings-save', { section:'document', values:{
+            header: document.getElementById('doc-header').value.trim(),
+            signatory: document.getElementById('doc-signatory').value.trim(),
+          }});
+          showToast('Saved', 'Document settings updated.');
+        } catch (e) { showToast('Failed', e.message, 'error'); }
+      });
+
+      on('save-system-btn', async () => {
+        try {
+          await syncFromServer('settings-save', { section:'system', values:{
+            language: document.getElementById('system-language').value,
+            dateFormat: document.getElementById('system-date-format').value,
+          }});
+          showToast('Saved', 'System preferences updated.');
+        } catch (e) { showToast('Failed', e.message, 'error'); }
+      });
+
+      on('download-backup-btn', async () => {
+        try {
+          const data = await api('backup');
+          const blob = new Blob([JSON.stringify({exportedAt:new Date().toISOString(),...data},null,2)],{type:'application/json'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href=url; a.download='barangay-backup.json'; a.click();
+          URL.revokeObjectURL(url);
+          document.getElementById('backup-status-text').textContent = 'Backup downloaded at '+new Date().toLocaleTimeString();
+          showToast('Backup downloaded', 'A JSON backup was generated.');
+        } catch (e) { showToast('Backup failed', e.message, 'error'); }
+      });
+
+      on('restore-backup-btn', () => {
+        const file = document.getElementById('restore-file-input').files[0];
+        if (!file) return showToast('Blocked', 'Choose a backup file first.', 'error');
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            await syncFromServer('restore', { backup: JSON.parse(reader.result) });
+            document.getElementById('backup-status-text').textContent = 'Restored from '+file.name;
+            showToast('Backup restored', 'Data replaced from backup file.');
+          } catch (e) { showToast('Restore failed', e.message||'Invalid backup file.', 'error'); }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // EVENTS
+    // ──────────────────────────────────────────────────────────────────────────
+    function attachEvents() {
+      document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+      document.getElementById('modal-backdrop').addEventListener('click', e => {
+        if (e.target.id === 'modal-backdrop') closeModal();
+      });
+
+      const on = (id, ev, fn) => { const el = document.getElementById(id); if(el) el.addEventListener(ev, fn); };
+      on('resident-search','input', e => { state.residentSearch=e.target.value.trim(); renderResidents(); });
+      on('resident-zone-filter','change', e => { state.residentZone=e.target.value; renderResidents(); });
+      on('household-search','input', e => { state.householdSearch=e.target.value.trim(); renderHouseholds(); });
+      on('doc-search','input', e => { state.docSearch=e.target.value.trim(); renderDocuments(); });
+      on('doc-status-filter','change', e => { state.docStatus=e.target.value; renderDocuments(); });
+      on('doc-type-filter','change', e => { state.docType=e.target.value; renderDocuments(); });
+      on('archive-search','input', e => { state.archiveSearch=e.target.value.trim(); renderArchive(); });
+
+      on('add-resident-btn','click', () => showResidentForm());
+      on('add-household-btn','click', () => showHouseholdForm());
+      on('add-doc-btn','click', () => showDocumentForm());
+
+      ['home-notif-btn','residents-notif-btn'].forEach(id => {
+        on(id, 'click', () => openModal('Notifications',
+          '<div class="detail-grid">'+state.notifications.map(n=>`<div class="detail-card"><div class="detail-label">Alert</div><div class="detail-value">${esc(n)}</div></div>`).join('')+'</div>',
+          [{ label:'Close', className:'save-btn', onClick:closeModal }]
+        ));
+      });
+
+      attachSettingsActions();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // INIT
+    // ──────────────────────────────────────────────────────────────────────────
+    async function init() {
+      // Auth check first
+      try {
+        const res  = await fetch('auth.php?action=check');
+        const data = await res.json();
+        if (!data.success) {
+          window.location.href = 'login.html';
+          return;
+        }
+        state.me = data.user;
+      } catch (e) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Init sidebars
+      document.querySelectorAll('.sidebar').forEach(s => {
+        const pid = 'page-' + s.id.replace('sidebar-', '');
+        s.innerHTML = buildSidebar(pid);
+      });
+      document.getElementById('sp-account').style.cssText = 'display:flex;flex-direction:column;';
+
+      attachEvents();
+      updateTopbarAvatars();
+
+      // Load full data
+      try {
+        applyBootstrap(await api('bootstrap'));
+        refreshUI();
+      } catch (e) {
+        showToast('Database error', e.message, 'error');
+        // Still show the UI with auth data
+        refreshUI();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
